@@ -10,7 +10,7 @@ pkgs.mkShell
   ];
   
   shellHook = ''
-    source env/bin/activate
+    source .venv/bin/activate
     alias rm="trash -c always put"
   '';
 }

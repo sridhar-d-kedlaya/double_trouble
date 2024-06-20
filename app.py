@@ -1,14 +1,23 @@
 from flask import Flask, render_template, jsonify, make_response, request, send_from_directory, redirect
 from connection import createUser, loginUser, checkAdmin, forgotPassword
 from mail import sendMail
-
+import re
 
 app = Flask(__name__)
+
+@app.route('api/get_cookie/')
+def get_cookie():
+    return request.cookies.get('creds')
 
 @app.route("/api/create_user", methods=["POST"])
 def create_user():
     # Get form data and send to createUser
-    if createUser():
+    username = request.form.get("username")
+    email = request.form.get("email")
+    password = request.form.get("password")
+    firstname = request.form.get("firstname")
+    lastname = request.form.get("lastname")
+    if createUser(username, email, password, firstname, lastname):
         return redirect("/login")
     else:
         return redirect("/create_user_error")
@@ -16,32 +25,52 @@ def create_user():
 @app.route("/api/login_user", methods=["POST"])
 def login_user():
     # Get form data and send to loginUser
-    if loginUser():
-        # Set cookie with user_id and user_name
-        return redirect("/")
+    username = request.form.get("username")
+    password = request.form.get("password")
+    valid = loginUser(username, password)
+    if valid:
+        resp = make_response(redirect("/"))
+        resp.set_cookie("creds",jsonify({"id": valid[2], "username": valid[1]}))
+        return resp
     else:
-        return redirect("/loign_user_error")
-    return jsonify(access_token=access_token), 200
+        return redirect("/login_user_error")
 
 @app.route("/api/forgot_password", methods=["POST"])
 def forgot_password():
     # Send form data to forgotPassword()
-    if forgotPassword() and sendMail():
+    email = request.form.get("email")
+    pattern = "(UPDATE|update|DROP|drop|DELETE|delete|INSERT|insert|INTO|into|\"|\\)"
+    if re.match(pattern, email):
+        redirect("/forgot")
+    pattern = ".*@.*(\\.).+"
+    if re.match(pattern, email):
+        redirect("/forgot")
+    password = forgotPassword(email)
+    if password[0] and sendMail(password[1]):
         return redirect("/mail")
     else:
-        return redirect("/forgot_password_error")
+        pattern = "(Integrity)"
+        if re.match(pattern, password[1]):
+            resp = make_response(redirect("/forgot_password_error"))
+            resp.set_cookie("creds",password[1])
+            return resp
+        else:
+            return redirect("/forgot")
 
 @app.route("/api/check_admin", methods=["POST"])
 def check_admin():
-    # Get cookie and get user id
-    if checkAdmin(user_id):
-        return true
+    # Get cookie and get user id and username
+    cookie = get_cookie()
+    username = cookie["username"]
+    user_id = cookie["id"]
+    if checkAdmin(username, user_id):
+        return True
     else:
-        return false
+        return False
 
 @app.route("/", methods=["GET"])
 def common():
-    if getcookie()=="":
+    if get_cookie()=="":
         return redirect("/login")
     else:
         rendered = render_template('common.html')
