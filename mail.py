@@ -1,2 +1,2 @@
-def sendMail:
+def sendMail():
     return False

@@ -23,7 +23,7 @@ def connectDB():
 def closeDB():
     return dataBase.close()
 
-def createUser(username, firstname, lastname, email, password):
+def createUser(username, email, password, firstname, lastname):
     try:
         cursorObject = connectDB()
         qry = """INSERT INTO users (user_name, first_name, last_name, email, password)
