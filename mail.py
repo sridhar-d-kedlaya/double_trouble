@@ -1,0 +1,2 @@
+def sendMail():
+    return False
