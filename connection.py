@@ -4,10 +4,11 @@ def connectDB():
     if 'dataBase' not in globals():
         global dataBase
         dataBase = mysql.connector.connect(
-            host ="localhost",
-            user ="parzival",
-            passwd ="zcs4Ft)ASJ'Y-.Nk`5twTs5E/",
-            database = "iitb_ctf"
+            host ="mysql-db",
+            user ="root",
+            passwd ="root",
+            database = "iitb_ctf",
+            port = 3306
         )
         return dataBase.cursor()
     else:
